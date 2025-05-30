@@ -89,7 +89,7 @@ namespace REST_API_Practice.Controllers
         public ActionResult<Book> GetBookById(int id)
         {
             // Retrieve book with matching Id from booklist
-            var book = books.FirstOrDefault(x => x.Id == id);
+            var book = books.FirstOrDefault(book => book.Id == id);
 
             // Check if the retrieved book is valid before returning to user
             if (book == null)
@@ -103,13 +103,13 @@ namespace REST_API_Practice.Controllers
         {
             // Check if book is valid
             if (newBook == null)
-                return BadRequest("Invalid Book");
+                return BadRequest();
 
             if (books.Contains(newBook))
                 return BadRequest("Book already exists");
 
             // Check if submitted Id is already taken
-            var match = books.Where(x => x.Id == newBook.Id);
+            var match = books.Where(book => book.Id == newBook.Id);
             if (match.Count() > 0)
                 return BadRequest("Invalid ID");
 
@@ -117,6 +117,24 @@ namespace REST_API_Practice.Controllers
             books.Add(newBook);
             // Send 201 status code
             return CreatedAtAction(nameof(GetBookById), new { id = newBook.Id}, newBook);
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateBook(int id, Book updatedBook)
+        {
+            // Check if book to be updated exists in booklist
+            var book = books.FirstOrDefault(book => book.Id == id);
+            if (book == null)
+                return NotFound();
+
+            // Update book
+            book.Title = updatedBook.Title;
+            book.Author = updatedBook.Author;
+            book.YearPublished = updatedBook.YearPublished;
+            book.ISBN = updatedBook.ISBN;
+
+            // Returns 204 status code to indicate a successful update
+            return NoContent();
         }
     }
 }

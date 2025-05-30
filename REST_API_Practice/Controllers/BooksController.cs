@@ -84,5 +84,39 @@ namespace REST_API_Practice.Controllers
             // Return all books in static list
             return Ok(books);
         }
+
+        [HttpGet("{id}")]
+        public ActionResult<Book> GetBookById(int id)
+        {
+            // Retrieve book with matching Id from booklist
+            var book = books.FirstOrDefault(x => x.Id == id);
+
+            // Check if the retrieved book is valid before returning to user
+            if (book == null)
+                return NotFound();
+                
+            return Ok(book);
+        }
+
+        [HttpPost]
+        public ActionResult<Book> AddBook(Book newBook)
+        {
+            // Check if book is valid
+            if (newBook == null)
+                return BadRequest("Invalid Book");
+
+            if (books.Contains(newBook))
+                return BadRequest("Book already exists");
+
+            // Check if submitted Id is already taken
+            var match = books.Where(x => x.Id == newBook.Id);
+            if (match.Count() > 0)
+                return BadRequest("Invalid ID");
+
+            // Add to booklist if all checks pass
+            books.Add(newBook);
+            // Send 201 status code
+            return CreatedAtAction(nameof(GetBookById), new { id = newBook.Id}, newBook);
+        }
     }
 }

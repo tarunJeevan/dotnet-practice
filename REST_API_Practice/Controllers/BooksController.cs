@@ -89,7 +89,7 @@ namespace REST_API_Practice.Controllers
         public ActionResult<Book> GetBookById(int id)
         {
             // Retrieve book with matching Id from booklist
-            var book = books.FirstOrDefault(book => book.Id == id);
+            var book = books.FirstOrDefault(temp => temp.Id == id);
 
             // Check if the retrieved book is valid before returning to user
             if (book == null)
@@ -116,11 +116,11 @@ namespace REST_API_Practice.Controllers
             // Add to booklist if all checks pass
             books.Add(newBook);
             // Send 201 status code
-            return CreatedAtAction(nameof(GetBookById), new { id = newBook.Id}, newBook);
+            return CreatedAtAction(nameof(GetBookById), new { id = newBook.Id }, newBook);
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateBook(int id, Book updatedBook)
+        public ActionResult<List<Book>> UpdateBook(int id, Book updatedBook)
         {
             // Check if book to be updated exists in booklist
             var book = books.FirstOrDefault(book => book.Id == id);
@@ -133,8 +133,23 @@ namespace REST_API_Practice.Controllers
             book.YearPublished = updatedBook.YearPublished;
             book.ISBN = updatedBook.ISBN;
 
-            // Returns 204 status code to indicate a successful update
-            return NoContent();
+            // Returns 200 status code and returns updated booklist
+            return Ok(books);
+        }
+
+        [HttpDelete("{id}")]
+        public ActionResult<List<Book>> DeleteBook(int id)
+        {
+            // Retrieve book with matching Id from booklist
+            var book = books.FirstOrDefault(temp => temp.Id == id);
+
+            // Check if the retrieved book is valid before returning to user
+            if (book == null)
+                return NotFound();
+
+            // Delete book and return updated booklist
+            books.Remove(book);
+            return Ok(books);
         }
     }
 }

@@ -11,7 +11,7 @@ Accept: application/json
 
 ###
 // Get book by ID
-GET {{rootURL}}/api/books/2/
+GET {{rootURL}}/api/books/3/
 Accept: application/json
 
 ###
@@ -19,11 +19,10 @@ Accept: application/json
 POST {{rootURL}}/api/books/
 Content-Type: application/json
 {
-  "id": 9,
-  "title": "Scythe",
-  "author": "Neal Shusterman",
-  "yearPublished": 2018,
-  "isbn": "9781406379242"
+  "title": "Free to Fall",
+  "author": "Lauren Miller",
+  "yearPublished": 2014,
+  "isbn": "9780062199805"
 }
 
 ###
@@ -32,10 +31,10 @@ PUT {{rootURL}}/api/books/2/
 Content-Type: application/json
 {
   "id": 2,
-  "title": "Scythe",
-  "author": "Neal Shusterman",
-  "yearPublished": 2018,
-  "isbn": "9781406379242"
+  "title": "Free to Fall",
+  "author": "Lauren Miller",
+  "yearPublished": 2014,
+  "isbn": "9780062199805"
 }
 
 ###

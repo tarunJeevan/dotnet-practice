@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using REST_API_Practice.Data;
 using REST_API_Practice.Models;
 
 namespace REST_API_Practice.Controllers
@@ -9,102 +11,43 @@ namespace REST_API_Practice.Controllers
     [ApiController]
     public class BooksController : ControllerBase
     {
-        // Create static list in place of database
-        static private List<Book> books = new List<Book>
+        private readonly REST_API_Practice_Context _context;
+
+        public BooksController(REST_API_Practice_Context context)
         {
-            new Book
-            {
-                Id = 1,
-                Title = "Collapse: How Societies Choose to Fail or Succeed",
-                Author = "Jared Diamond",
-                YearPublished = 2011,
-                ISBN = "9780143117001"
-            },
-            new Book
-            {
-                Id = 2,
-                Title = "Free to Fall",
-                Author = "Lauren Miller",
-                YearPublished = 2014,
-                ISBN = "9780062199805"
-            },
-            new Book
-            {
-                Id = 3,
-                Title = "Guns, Germs, and Steel: A short history of everybody for the last 13,000 years",
-                Author = "Jared Diamond",
-                YearPublished = 1998,
-                ISBN = "9780099302780"
-            },
-            new Book
-            {
-                Id = 4,
-                Title = "Philosophical Phridays: Volume 1",
-                Author = "Gregory Kerr",
-                YearPublished = 2019,
-                ISBN = "9780359434121"
-            },
-            new Book
-            {
-                Id = 5,
-                Title = "The Arthashastra",
-                Author = "Kautilya",
-                YearPublished = 2000,
-                ISBN = "9788184750119"
-            },
-            new Book
-            {
-                Id = 6,
-                Title = "Nyxia",
-                Author = "Scott Reintgen",
-                YearPublished = 2017,
-                ISBN = "9780399556821"
-            },
-            new Book
-            {
-                Id = 7,
-                Title = "Defy the Stars",
-                Author = "Claudia Gray",
-                YearPublished = 2017,
-                ISBN = "9780316394031"
-            },
-            new Book
-            {
-                Id = 8,
-                Title = "Croak",
-                Author = "Gina Damico",
-                YearPublished = 2012,
-                ISBN = "9780547822563"
-            }
-        };
+            _context = context;
+        }
 
         [HttpGet]
-        public ActionResult<List<Book>> GetAllBooks()
+        public async Task<ActionResult<List<Book>>> GetAllBooks()
         {
-            // Return all books in static list
-            return Ok(books);
+            // Return all books in database
+            return Ok(await _context.Books.ToListAsync());
         }
 
         [HttpGet("{id}")]
-        public ActionResult<Book> GetBookById(int id)
+        public async Task<ActionResult<Book>> GetBookById(int id)
         {
-            // Retrieve book with matching Id from booklist
-            var book = books.FirstOrDefault(temp => temp.Id == id);
+            // Retrieve book with matching Id from database
+            var book = await _context.Books.FindAsync(id);
 
             // Check if the retrieved book is valid before returning to user
             if (book == null)
                 return NotFound();
-                
+
             return Ok(book);
         }
 
         [HttpPost]
-        public ActionResult<Book> AddBook(Book newBook)
+        public async Task<ActionResult<Book>> AddBook(Book newBook)
         {
             // Check if book is valid
             if (newBook == null)
                 return BadRequest();
 
+            // Get all books from database
+            var books = await _context.Books.ToListAsync();
+            // Check if book already exists in database
             if (books.Contains(newBook))
                 return BadRequest("Book already exists");
 
@@ -113,43 +56,51 @@ namespace REST_API_Practice.Controllers
             if (match.Count() > 0)
                 return BadRequest("Invalid ID");
 
-            // Add to booklist if all checks pass
-            books.Add(newBook);
+            // Add book to database if all checks pass and sync
+            _context.Books.Add(newBook);
+            await _context.SaveChangesAsync();
+
             // Send 201 status code
             return CreatedAtAction(nameof(GetBookById), new { id = newBook.Id }, newBook);
         }
 
         [HttpPut("{id}")]
-        public ActionResult<List<Book>> UpdateBook(int id, Book updatedBook)
+        public async Task<ActionResult<List<Book>>> UpdateBook(int id, Book updatedBook)
         {
-            // Check if book to be updated exists in booklist
-            var book = books.FirstOrDefault(book => book.Id == id);
+            // Check if book to be updated exists in database
+            var book = await _context.Books.FindAsync(id);
             if (book == null)
                 return NotFound();
 
-            // Update book
+            // Update book data
             book.Title = updatedBook.Title;
             book.Author = updatedBook.Author;
             book.YearPublished = updatedBook.YearPublished;
             book.ISBN = updatedBook.ISBN;
 
+            // Save data to database
+            await _context.SaveChangesAsync();
+
             // Returns 200 status code and returns updated booklist
-            return Ok(books);
+            return Ok(await _context.Books.ToListAsync());
         }
 
         [HttpDelete("{id}")]
-        public ActionResult<List<Book>> DeleteBook(int id)
+        public async Task<ActionResult<List<Book>>> DeleteBook(int id)
         {
             // Retrieve book with matching Id from booklist
-            var book = books.FirstOrDefault(temp => temp.Id == id);
+            var book = await _context.Books.FindAsync(id);
 
             // Check if the retrieved book is valid before returning to user
             if (book == null)
                 return NotFound();
 
-            // Delete book and return updated booklist
-            books.Remove(book);
-            return Ok(books);
+            // Delete book from database and save
+            _context.Books.Remove(book);
+            await _context.SaveChangesAsync();
+
+            // Return updated list
+            return Ok(await _context.Books.ToListAsync());
         }
     }
 }
